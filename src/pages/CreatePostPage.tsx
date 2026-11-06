@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { EmptyState } from "../components/EmptyState";
 import { Icon } from "../components/Icon";
 import { MediaCard } from "../components/MediaCard";
@@ -8,7 +9,7 @@ import { PageHeading } from "../components/PageHeading";
 import { PublishingCard } from "../components/PublishingCard";
 import { useMediaLibrary } from "../media/MediaProvider";
 import type { MediaItem } from "../media/mediaTypes";
-import { getAllPosts, savePost } from "../media/mediaDatabase";
+import { getAllPosts, getPostById, savePost } from "../media/mediaDatabase";
 import {
   copyOriginalToPlatform,
   platforms,
@@ -104,6 +105,8 @@ function SelectedMediaCard({
 
 export function CreatePostPage() {
   const { items, isLoading, loadError, reload } = useMediaLibrary();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedPostId = searchParams.get("post");
   const [draft, setDraft] = useState<PostDraft>(() => createEmptyPost());
   const [isReady, setIsReady] = useState(false);
   const [loadPostError, setLoadPostError] = useState<string | null>(null);
@@ -142,9 +145,18 @@ export function CreatePostPage() {
   const loadDraft = useCallback(async () => {
     setIsReady(false);
     setLoadPostError(null);
+    if (dirtyRef.current) {
+      revisionRef.current += 1;
+      enqueueSave(draftRef.current, revisionRef.current - 1);
+    }
     try {
-      const posts = await getAllPosts();
-      const latest = posts.sort((a, b) => b.updatedAt - a.updatedAt)[0];
+      const latest = requestedPostId
+        ? await getPostById(requestedPostId)
+        : (await getAllPosts()).sort((a, b) => b.updatedAt - a.updatedAt)[0];
+      if (requestedPostId && !latest) {
+        setLoadPostError("This post could not be found.");
+        return;
+      }
       const loaded = latest
         ? {
             ...latest,
@@ -179,7 +191,7 @@ export function CreatePostPage() {
         error instanceof Error ? error.message : "Could not load your draft.",
       );
     }
-  }, []);
+  }, [enqueueSave, requestedPostId]);
 
   useEffect(() => {
     void loadDraft();
@@ -292,13 +304,32 @@ export function CreatePostPage() {
   }
 
   function resetPlatform(platform: PlatformKey) {
-    updateDraft((post) => ({
-      ...post,
-      platforms: {
-        ...post.platforms,
-        [platform]: resetPlatformContent(platform, post.originalContent),
-      },
-    }));
+    updateDraft((post) => {
+      if (platform === "youtube") {
+        const reset = resetPlatformContent(
+          "youtube",
+          post.originalContent,
+        );
+        return {
+          ...post,
+          platforms: {
+            ...post.platforms,
+            youtube: { ...reset, status: post.platforms.youtube.status },
+          },
+        };
+      }
+      const reset = resetPlatformContent(platform, post.originalContent);
+      return {
+        ...post,
+        platforms: {
+          ...post.platforms,
+          [platform]: {
+            ...reset,
+            status: post.platforms[platform].status,
+          },
+        },
+      };
+    });
   }
 
   function updatePlatformStatus(
@@ -326,10 +357,13 @@ export function CreatePostPage() {
   }
 
   function startNewDraft() {
-    if (dirtyRef.current) {
-      enqueueSave(draftRef.current, revisionRef.current);
-    }
     const next = createEmptyPost();
+    void savePost(next).catch((error: unknown) => {
+      setSaveError(
+        error instanceof Error ? error.message : "Could not save your draft.",
+      );
+      setSaveState("error");
+    });
     draftRef.current = next;
     dirtyRef.current = true;
     revisionRef.current += 1;
@@ -337,6 +371,7 @@ export function CreatePostPage() {
     setIsDirty(true);
     setRevision(revisionRef.current);
     setSaveState("unsaved");
+    setSearchParams({ post: next.id });
   }
 
   const saveLabel: Record<SaveState, string> = {

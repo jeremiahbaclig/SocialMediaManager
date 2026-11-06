@@ -179,6 +179,25 @@ export async function savePost(post: PostDraft): Promise<void> {
   });
 }
 
+export async function deletePost(id: string): Promise<void> {
+  const database = await openDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction(postsStoreName, "readwrite");
+    transaction.objectStore(postsStoreName).delete(id);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => {
+      reject(
+        new Error(`Could not delete post: ${getErrorMessage(transaction.error)}`),
+      );
+    };
+    transaction.onabort = () => {
+      reject(
+        new Error(`Could not delete post: ${getErrorMessage(transaction.error)}`),
+      );
+    };
+  });
+}
+
 export async function getMediaPostReferences(
   mediaId: string,
 ): Promise<number> {
