@@ -56,7 +56,7 @@ function NavigationLinks({
 function Brand() {
   return (
     <div className="flex items-center gap-3 px-1">
-      <div className="flex size-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-brand-600 to-violet-500 text-white shadow-sm shadow-brand-900/15">
+      <div className="flex size-10 items-center justify-center rounded-[14px] bg-gradient-to-br from-brand-600 to-green-500 text-white shadow-sm shadow-brand-900/15">
         <Icon name="layers" className="size-5" />
       </div>
       <div>

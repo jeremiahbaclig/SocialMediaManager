@@ -2,11 +2,11 @@
 
 @theme {
   --color-brand-50: #f2f2ff;
-  --color-brand-100: #e6e5ff;
-  --color-brand-500: #7167e8;
-  --color-brand-600: #5d51d5;
-  --color-brand-700: #4c43bd;
-  --color-brand-800: #3e3795;
+  --color-brand-100: #b7ffb1;
+  --color-brand-500: #66ee5a;
+  --color-brand-600: #56c94c;
+  --color-brand-700: #46c94c;
+  --color-brand-800: #36c94c;
 }
 
 :root {

@@ -11,6 +11,8 @@ npm run dev
 
 Run `npm run build` to create the production site in `dist`.
 
+Images and videos are saved in this browser using IndexedDB. Clearing browser data removes them.
+
 ## Deploy
 
 In repository **Settings → Pages**, choose **GitHub Actions** as the source. Push to `main` to build and deploy using `.github/workflows/deploy.yml`.
