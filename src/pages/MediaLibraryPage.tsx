@@ -8,8 +8,16 @@ import { useMediaLibrary } from "../media/MediaProvider";
 import { formatFileSize, type MediaItem } from "../media/mediaTypes";
 
 export function MediaLibraryPage() {
-  const { items, isLoading, loadError, reload, deleteMedia } =
-    useMediaLibrary();
+  const {
+    items,
+    isLoading,
+    loadError,
+    reload,
+    deleteMedia,
+    storageUsage,
+    storageQuota,
+    storageError,
+  } = useMediaLibrary();
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
@@ -47,6 +55,22 @@ export function MediaLibraryPage() {
         <p className="text-xs leading-5 text-slate-500">
           Clearing this site’s browser data will delete saved media.
         </p>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <p className="font-medium text-slate-800">Browser storage</p>
+          {storageUsage !== null ? (
+            <p className="mt-1 text-slate-500">
+              {formatFileSize(storageUsage)} used
+              {storageQuota !== null
+                ? ` of ${formatFileSize(storageQuota)} available`
+                : ""}
+              . Estimates include other site data and may change.
+            </p>
+          ) : (
+            <p className="mt-1 text-slate-500">
+              {storageError ?? "Checking browser storage…"}
+            </p>
+          )}
+        </div>
 
         {loadError && (
           <div

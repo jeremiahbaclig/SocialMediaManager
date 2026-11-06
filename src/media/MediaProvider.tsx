@@ -26,6 +26,9 @@ type UploadResult = {
 
 type MediaLibraryValue = {
   items: MediaItem[];
+  storageUsage: number | null;
+  storageQuota: number | null;
+  storageError: string | null;
   isLoading: boolean;
   loadError: string | null;
   reload: () => Promise<void>;
@@ -37,8 +40,33 @@ const MediaLibraryContext = createContext<MediaLibraryValue | null>(null);
 
 export function MediaProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<MediaItem[]>([]);
+  const [storageUsage, setStorageUsage] = useState<number | null>(null);
+  const [storageQuota, setStorageQuota] = useState<number | null>(null);
+  const [storageError, setStorageError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const refreshStorageEstimate = useCallback(async () => {
+    if (!navigator.storage?.estimate) {
+      setStorageUsage(null);
+      setStorageQuota(null);
+      setStorageError("This browser does not report storage usage.");
+      return;
+    }
+
+    try {
+      const estimate = await navigator.storage.estimate();
+      setStorageUsage(estimate.usage ?? null);
+      setStorageQuota(estimate.quota ?? null);
+      setStorageError(null);
+    } catch (error) {
+      setStorageError(
+        error instanceof Error
+          ? `Could not check browser storage: ${error.message}`
+          : "Could not check browser storage.",
+      );
+    }
+  }, []);
 
   const reload = useCallback(async () => {
     setIsLoading(true);
@@ -52,7 +80,8 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+    await refreshStorageEstimate();
+  }, [refreshStorageEstimate]);
 
   useEffect(() => {
     void reload();
@@ -61,6 +90,36 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   const uploadFiles = useCallback(async (files: File[]) => {
     const added: MediaItem[] = [];
     const errors: string[] = [];
+    const totalSize = files.reduce((total, file) => {
+      const mimeType = getSupportedMimeType(file);
+      return file.size > 0 && getMediaKind(file.name, mimeType)
+        ? total + file.size
+        : total;
+    }, 0);
+
+    if (totalSize > 0 && navigator.storage?.estimate) {
+      try {
+        const estimate = await navigator.storage.estimate();
+        if (
+          estimate.usage !== undefined &&
+          estimate.quota !== undefined &&
+          totalSize > estimate.quota - estimate.usage
+        ) {
+          return {
+            added,
+            errors: [
+              "These files exceed the browser's estimated available storage. Free browser storage or choose fewer files, then try again.",
+            ],
+          };
+        }
+      } catch (error) {
+        setStorageError(
+          error instanceof Error
+            ? `Could not check browser storage: ${error.message}`
+            : "Could not check browser storage.",
+        );
+      }
+    }
 
     for (const file of files) {
       if (file.size === 0) {
@@ -91,6 +150,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
         setItems((current) =>
           [item, ...current].sort((a, b) => b.createdAt - a.createdAt),
         );
+        await refreshStorageEstimate();
       } catch (error) {
         errors.push(
           error instanceof Error
@@ -102,7 +162,7 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     }
 
     return { added, errors };
-  }, []);
+  }, [refreshStorageEstimate]);
 
   const deleteMedia = useCallback(async (id: string) => {
     const references = await getMediaPostReferences(id);
@@ -113,11 +173,32 @@ export function MediaProvider({ children }: { children: ReactNode }) {
     }
     await deleteMediaFromStorage(id);
     setItems((current) => current.filter((item) => item.id !== id));
-  }, []);
+    await refreshStorageEstimate();
+  }, [refreshStorageEstimate]);
 
   const value = useMemo(
-    () => ({ items, isLoading, loadError, reload, uploadFiles, deleteMedia }),
-    [items, isLoading, loadError, reload, uploadFiles, deleteMedia],
+    () => ({
+      items,
+      storageUsage,
+      storageQuota,
+      storageError,
+      isLoading,
+      loadError,
+      reload,
+      uploadFiles,
+      deleteMedia,
+    }),
+    [
+      items,
+      storageUsage,
+      storageQuota,
+      storageError,
+      isLoading,
+      loadError,
+      reload,
+      uploadFiles,
+      deleteMedia,
+    ],
   );
 
   return (
