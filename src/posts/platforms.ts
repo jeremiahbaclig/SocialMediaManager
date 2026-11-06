@@ -4,11 +4,32 @@ export const platforms: {
   id: PlatformKey;
   name: string;
   characterLimit: number;
+  publishingUrl: string;
 }[] = [
-  { id: "youtube", name: "YouTube", characterLimit: 100 },
-  { id: "tiktok", name: "TikTok", characterLimit: 2200 },
-  { id: "instagram", name: "Instagram", characterLimit: 2200 },
-  { id: "twitter", name: "X", characterLimit: 280 },
+  {
+    id: "youtube",
+    name: "YouTube",
+    characterLimit: 100,
+    publishingUrl: "https://studio.youtube.com/",
+  },
+  {
+    id: "tiktok",
+    name: "TikTok",
+    characterLimit: 2200,
+    publishingUrl: "https://www.tiktok.com/tiktokstudio/upload",
+  },
+  {
+    id: "instagram",
+    name: "Instagram",
+    characterLimit: 2200,
+    publishingUrl: "https://www.instagram.com/",
+  },
+  {
+    id: "twitter",
+    name: "X",
+    characterLimit: 280,
+    publishingUrl: "https://x.com/compose/post",
+  },
 ];
 
 export function copyOriginalToPlatform(
@@ -33,11 +54,16 @@ export function copyOriginalToPlatform(
         enabled: true,
         title: originalContent,
         description: originalContent,
+        status: "not_started",
       };
     case "tiktok":
     case "instagram":
     case "twitter":
-      return { enabled: true, caption: originalContent };
+      return {
+        enabled: true,
+        caption: originalContent,
+        status: "not_started",
+      };
   }
 }
 

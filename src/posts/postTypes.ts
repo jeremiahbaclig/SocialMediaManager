@@ -1,7 +1,10 @@
 export type PlatformKey = "youtube" | "tiktok" | "instagram" | "twitter";
 
+export type PlatformStatus = "not_started" | "in_progress" | "published";
+
 type PlatformDraft = {
   enabled: boolean;
+  status: PlatformStatus;
 };
 
 export type YoutubeDraft = PlatformDraft & {
@@ -36,10 +39,15 @@ export function createEmptyPost(id = crypto.randomUUID()): PostDraft {
     originalContent: "",
     mediaIds: [],
     platforms: {
-      youtube: { enabled: false, title: "", description: "" },
-      tiktok: { enabled: false, caption: "" },
-      instagram: { enabled: false, caption: "" },
-      twitter: { enabled: false, caption: "" },
+      youtube: {
+        enabled: false,
+        title: "",
+        description: "",
+        status: "not_started",
+      },
+      tiktok: { enabled: false, caption: "", status: "not_started" },
+      instagram: { enabled: false, caption: "", status: "not_started" },
+      twitter: { enabled: false, caption: "", status: "not_started" },
     },
     createdAt: now,
     updatedAt: now,

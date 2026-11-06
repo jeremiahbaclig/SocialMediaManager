@@ -5,6 +5,7 @@ import { MediaCard } from "../components/MediaCard";
 import { MediaPreviewDialog } from "../components/MediaPreviewDialog";
 import { MediaUploadPanel } from "../components/MediaUploadPanel";
 import { PageHeading } from "../components/PageHeading";
+import { PublishingCard } from "../components/PublishingCard";
 import { useMediaLibrary } from "../media/MediaProvider";
 import type { MediaItem } from "../media/mediaTypes";
 import { getAllPosts, savePost } from "../media/mediaDatabase";
@@ -16,6 +17,7 @@ import {
 import {
   createEmptyPost,
   type PlatformKey,
+  type PlatformStatus,
   type PostDraft,
 } from "../posts/postTypes";
 
@@ -143,7 +145,29 @@ export function CreatePostPage() {
     try {
       const posts = await getAllPosts();
       const latest = posts.sort((a, b) => b.updatedAt - a.updatedAt)[0];
-      const loaded = latest ?? createEmptyPost();
+      const loaded = latest
+        ? {
+            ...latest,
+            platforms: {
+              youtube: {
+                ...latest.platforms.youtube,
+                status: latest.platforms.youtube.status ?? "not_started",
+              },
+              tiktok: {
+                ...latest.platforms.tiktok,
+                status: latest.platforms.tiktok.status ?? "not_started",
+              },
+              instagram: {
+                ...latest.platforms.instagram,
+                status: latest.platforms.instagram.status ?? "not_started",
+              },
+              twitter: {
+                ...latest.platforms.twitter,
+                status: latest.platforms.twitter.status ?? "not_started",
+              },
+            },
+          }
+        : createEmptyPost();
       draftRef.current = loaded;
       dirtyRef.current = false;
       setDraft(loaded);
@@ -277,6 +301,30 @@ export function CreatePostPage() {
     }));
   }
 
+  function updatePlatformStatus(
+    platform: PlatformKey,
+    status: PlatformStatus,
+  ) {
+    updateDraft((post) => {
+      if (platform === "youtube") {
+        return {
+          ...post,
+          platforms: {
+            ...post.platforms,
+            youtube: { ...post.platforms.youtube, status },
+          },
+        };
+      }
+      return {
+        ...post,
+        platforms: {
+          ...post.platforms,
+          [platform]: { ...post.platforms[platform], status },
+        },
+      };
+    });
+  }
+
   function startNewDraft() {
     if (dirtyRef.current) {
       enqueueSave(draftRef.current, revisionRef.current);
@@ -297,6 +345,12 @@ export function CreatePostPage() {
     saving: "Saving…",
     error: "Save failed",
   };
+  const enabledPlatforms = platforms.filter(
+    ({ id }) => draft.platforms[id].enabled,
+  );
+  const publishedCount = enabledPlatforms.filter(
+    ({ id }) => draft.platforms[id].status === "published",
+  ).length;
 
   return (
     <>
@@ -603,6 +657,50 @@ export function CreatePostPage() {
                 title="No media yet"
                 description="Upload images or videos above to add them to your library."
               />
+            )}
+          </section>
+
+          <section aria-label="Publishing">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Publishing
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Copy content, download media, and publish on each platform.
+                </p>
+              </div>
+              {enabledPlatforms.length > 0 && (
+                <div className="min-w-52">
+                  <p className="mb-1.5 text-right text-sm font-medium text-slate-700">
+                    {publishedCount} / {enabledPlatforms.length} platforms
+                    published
+                  </p>
+                  <progress
+                    aria-label={`${publishedCount} of ${enabledPlatforms.length} platforms published`}
+                    value={publishedCount}
+                    max={enabledPlatforms.length}
+                    className="h-2 w-full overflow-hidden rounded-full accent-emerald-600"
+                  />
+                </div>
+              )}
+            </div>
+            {enabledPlatforms.length > 0 ? (
+              <div className="space-y-4">
+                {enabledPlatforms.map((platform) => (
+                  <PublishingCard
+                    key={platform.id}
+                    platform={platform}
+                    post={draft}
+                    media={selectedItems}
+                    onStatusChange={updatePlatformStatus}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500">
+                Select a platform to prepare its publishing card.
+              </p>
             )}
           </section>
         </div>

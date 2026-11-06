@@ -2,8 +2,11 @@ import type { ReactNode, SVGProps } from "react";
 
 export type IconName =
   | "arrow-down"
+  | "arrow-up-right"
   | "arrow-up"
   | "close"
+  | "copy"
+  | "download"
   | "file"
   | "image"
   | "layers"
@@ -15,8 +18,26 @@ export type IconName =
 
 const paths: Record<IconName, ReactNode> = {
   "arrow-down": <path d="M12 5v14m-7-7 7 7 7-7" />,
+  "arrow-up-right": (
+    <>
+      <path d="M7 17 17 7" />
+      <path d="M7 7h10v10" />
+    </>
+  ),
   "arrow-up": <path d="M12 19V5m-7 7 7-7 7 7" />,
   close: <path d="m18 6-12 12M6 6l12 12" />,
+  copy: (
+    <>
+      <rect x="8" y="8" width="13" height="13" rx="2" />
+      <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 3v12m-5-5 5 5 5-5" />
+      <path d="M5 17v4h14v-4" />
+    </>
+  ),
   file: (
     <>
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
