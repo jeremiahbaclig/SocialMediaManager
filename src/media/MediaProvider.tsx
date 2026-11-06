@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   deleteMediaFromStorage,
+  getMediaPostReferences,
   getAllMedia,
   saveMedia,
 } from "./mediaDatabase";
@@ -104,6 +105,12 @@ export function MediaProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteMedia = useCallback(async (id: string) => {
+    const references = await getMediaPostReferences(id);
+    if (references > 0) {
+      throw new Error(
+        `This media is used by ${references} saved ${references === 1 ? "post" : "posts"}. Remove it from those posts before deleting it.`,
+      );
+    }
     await deleteMediaFromStorage(id);
     setItems((current) => current.filter((item) => item.id !== id));
   }, []);

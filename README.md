@@ -11,7 +11,7 @@ npm run dev
 
 Run `npm run build` to create the production site in `dist`.
 
-Images and videos are saved in this browser using IndexedDB. Clearing browser data removes them.
+Drafts, images, and videos are saved in this browser using IndexedDB. Clearing browser data removes them.
 
 ## Deploy
 

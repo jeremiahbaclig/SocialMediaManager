@@ -1,8 +1,10 @@
 import type { MediaItem } from "./mediaTypes";
+import type { PostDraft } from "../posts/postTypes";
 
 const databaseName = "social-publisher";
-const databaseVersion = 1;
+const databaseVersion = 2;
 const mediaStoreName = "media";
+const postsStoreName = "posts";
 
 let databasePromise: Promise<IDBDatabase> | undefined;
 
@@ -21,6 +23,9 @@ function openDatabase(): Promise<IDBDatabase> {
       const database = request.result;
       if (!database.objectStoreNames.contains(mediaStoreName)) {
         database.createObjectStore(mediaStoreName, { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains(postsStoreName)) {
+        database.createObjectStore(postsStoreName, { keyPath: "id" });
       }
     };
 
@@ -125,4 +130,58 @@ export async function deleteMediaFromStorage(id: string): Promise<void> {
       );
     };
   });
+}
+
+export async function getPostById(id: string): Promise<PostDraft | undefined> {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database
+      .transaction(postsStoreName, "readonly")
+      .objectStore(postsStoreName)
+      .get(id);
+    request.onsuccess = () => resolve(request.result as PostDraft | undefined);
+    request.onerror = () => {
+      reject(new Error(`Could not load post: ${getErrorMessage(request.error)}`));
+    };
+  });
+}
+
+export async function getAllPosts(): Promise<PostDraft[]> {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database
+      .transaction(postsStoreName, "readonly")
+      .objectStore(postsStoreName)
+      .getAll();
+    request.onsuccess = () => resolve(request.result as PostDraft[]);
+    request.onerror = () => {
+      reject(new Error(`Could not load posts: ${getErrorMessage(request.error)}`));
+    };
+  });
+}
+
+export async function savePost(post: PostDraft): Promise<void> {
+  const database = await openDatabase();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction(postsStoreName, "readwrite");
+    transaction.objectStore(postsStoreName).put(post);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => {
+      reject(
+        new Error(`Could not save post: ${getErrorMessage(transaction.error)}`),
+      );
+    };
+    transaction.onabort = () => {
+      reject(
+        new Error(`Could not save post: ${getErrorMessage(transaction.error)}`),
+      );
+    };
+  });
+}
+
+export async function getMediaPostReferences(
+  mediaId: string,
+): Promise<number> {
+  const posts = await getAllPosts();
+  return posts.filter((post) => post.mediaIds.includes(mediaId)).length;
 }
