@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "../components/EmptyState";
 import { Icon } from "../components/Icon";
 import { PageHeading } from "../components/PageHeading";
+import { PlatformIcon } from "../components/PlatformIcon";
 import { useObjectUrl } from "../media/useObjectUrl";
 import { deletePost, getAllPosts, savePost } from "../media/mediaDatabase";
 import { useMediaLibrary } from "../media/MediaProvider";
@@ -116,8 +117,12 @@ function PostCard({
             enabled.map((platform) => (
               <span
                 key={platform.id}
-                className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
               >
+                <PlatformIcon
+                  platform={platform.id}
+                  className="size-3.5 shrink-0"
+                />
                 {platform.name}
               </span>
             ))
@@ -146,7 +151,7 @@ function PostCard({
             to={editHref}
             className="inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-2 text-xs font-medium text-white hover:bg-brand-800"
           >
-            {status === "partially_published" ? "Resume" : "Open / edit"}
+            {status === "partially_published" ? "Resume" : "Edit"}
           </Link>
           <button
             type="button"

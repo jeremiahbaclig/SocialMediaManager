@@ -8,6 +8,7 @@ import type {
   PostDraft,
 } from "../posts/postTypes";
 import { Icon } from "./Icon";
+import { PlatformIcon } from "./PlatformIcon";
 
 type PublishingCardProps = {
   platform: {
@@ -97,8 +98,8 @@ export function PublishingCard({
     <article className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-brand-50 text-sm font-bold text-brand-700">
-            {platform.name === "YouTube" ? "▶" : platform.name[0]}
+          <span className="flex size-9 items-center justify-center rounded-xl bg-brand-50">
+            <PlatformIcon platform={platform.id} className="size-5" />
           </span>
           <h3 className="text-base font-semibold text-slate-900">
             {platform.name}

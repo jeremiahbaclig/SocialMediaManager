@@ -6,6 +6,7 @@ import { MediaCard } from "../components/MediaCard";
 import { MediaPreviewDialog } from "../components/MediaPreviewDialog";
 import { MediaUploadPanel } from "../components/MediaUploadPanel";
 import { PageHeading } from "../components/PageHeading";
+import { PlatformIcon } from "../components/PlatformIcon";
 import { PublishingCard } from "../components/PublishingCard";
 import { useMediaLibrary } from "../media/MediaProvider";
 import type { MediaItem } from "../media/mediaTypes";
@@ -478,6 +479,10 @@ export function CreatePostPage() {
                       }
                       className="size-4 accent-brand-700"
                     />
+                    <PlatformIcon
+                      platform={platform.id}
+                      className="size-5 shrink-0"
+                    />
                     <span className="text-sm font-medium text-slate-800">
                       {platform.name}
                     </span>
@@ -506,7 +511,11 @@ export function CreatePostPage() {
                   className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
                 >
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-base font-semibold text-slate-900">
+                    <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                      <PlatformIcon
+                        platform={platform.id}
+                        className="size-5 shrink-0"
+                      />
                       {platform.name}
                     </h2>
                     <button
